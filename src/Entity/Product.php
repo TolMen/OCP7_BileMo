@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ProductRepository;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -12,15 +13,19 @@ class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getProducts"])]
     private ?string $name = null;
 
     #[ORM\Column]
+    #[Groups(["getProducts"])]
     private ?float $price = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(["getProducts"])]
     private ?string $description = null;
 
     public function getId(): ?int
