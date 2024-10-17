@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 
 class APIProductController extends AbstractController
 {
@@ -21,13 +22,19 @@ class APIProductController extends AbstractController
     - URI : /api/products
     - Méthode HTTP : "Verbe" GET
     - Authentification : Accès libre
+    - Pagination défauts : Limite de 10 par page
+    - Modifier la pagination : URI + ?page=X&limit=X (X etant un chiffre à choisir)
     
     */
 
     #[Route('/api/products', name: 'products', methods: ['GET'])]
-    public function getAllProducts(ProductRepository $productRepository, SerializerInterface $serializer): JsonResponse
+    public function getAllProducts(ProductRepository $productRepository, SerializerInterface $serializer, Request $request): JsonResponse
     {
-        $productList = $productRepository->findAll();
+
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit',10);
+
+        $productList = $productRepository->findAllWithPagination($page, $limit);
         
         $jsonProductList = $serializer->serialize($productList, 'json', ['groups' => 'getProducts']);
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);

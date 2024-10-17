@@ -27,14 +27,21 @@ class APIUserController extends AbstractController
     - URI : /api/users
     - Méthode HTTP : "Verbe" GET
     - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
+    - Pagination défauts : Limite de 10 par page
+    - Modifier la pagination : URI + ?page=X&limit=X (X etant un chiffre à choisir)
 
     */
 
     #[Route('/api/users', name: 'users', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les utilisateurs')]
-    public function getAllUsers(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
+    public function getAllUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request): JsonResponse
     {
-        $userList = $userRepository->findAll();
+
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit',10);
+
+        $userList = $userRepository->findAllWithPagination($page, $limit);
         $jsonUserList = $serializer->serialize($userList, 'json', ['groups' => 'getUsers']);
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
     }
@@ -47,6 +54,7 @@ class APIUserController extends AbstractController
     - URI : /api/users/{id}
     - Méthode HTTP : "Verbe" GET
     - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
 
@@ -66,6 +74,7 @@ class APIUserController extends AbstractController
     - URI : /api/clients/{clientId}/users/{id}
     - Méthode HTTP : "Verbe" DELETE
     - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
 
@@ -86,6 +95,7 @@ class APIUserController extends AbstractController
     - URI : /api/clients/{clientId}/users
     - Méthode HTTP : "Verbe" POST
     - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
     
