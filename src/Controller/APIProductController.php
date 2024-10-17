@@ -20,6 +20,7 @@ class APIProductController extends AbstractController
 
     - URI : /api/products
     - Méthode HTTP : "Verbe" GET
+    - Authentification : Accès libre
     
     */
 
@@ -39,6 +40,7 @@ class APIProductController extends AbstractController
 
     - URI : /api/products/{id}
     - Méthode HTTP : "Verbe" GET
+    - Authentification : Accès libre
 
     */
 

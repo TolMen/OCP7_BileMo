@@ -15,16 +15,23 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class APIUserController extends AbstractController
 {
 
     /*
+
     Récupère la liste de tous les utilisateurs
+
     - URI : /api/users
     - Méthode HTTP : "Verbe" GET
+    - Authentification : JWT requise
+
     */
+
     #[Route('/api/users', name: 'users', methods: ['GET'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les utilisateurs')]
     public function getAllUsers(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
         $userList = $userRepository->findAll();
@@ -32,24 +39,38 @@ class APIUserController extends AbstractController
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
     }
 
+
     /*
+
     Récupère les détails d'un seul utilisateur
+
     - URI : /api/users/{id}
     - Méthode HTTP : "Verbe" GET
+    - Authentification : JWT requise
+
     */
+
     #[Route('/api/users/{id}', name: 'detailUser', methods: ['GET'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les détails d\'un utilisateur')]
     public function getDetailUser(User $user, SerializerInterface $serializer): JsonResponse
     {
         $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
+
     /*
+
     Supprime l'utilisateur d'un client
+
     - URI : /api/clients/{clientId}/users/{id}
     - Méthode HTTP : "Verbe" DELETE
+    - Authentification : JWT requise
+
     */
+
     #[Route('/api/clients/{clientId}/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour supprimer un utilisateur')]
     public function deleteUser(User $user, EntityManagerInterface $em): JsonResponse
     {
         $em->remove($user);
@@ -57,12 +78,19 @@ class APIUserController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+
     /*
+
     Crée un utilisateur pour un client
+
     - URI : /api/clients/{clientId}/users
     - Méthode HTTP : "Verbe" POST
+    - Authentification : JWT requise
+
     */
+    
     #[Route('/api/clients/{clientId}/users', name:"createUser", methods: ['POST'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour créer un utilisateur')]
     public function createUser(
         Request $request,
         SerializerInterface $serializer,
@@ -91,6 +119,9 @@ class APIUserController extends AbstractController
         // Hachage du mot de passe
         $hashedPassword = $passwordHasher->hashPassword($user, $user->getPassword());
         $user->setPassword($hashedPassword);
+
+        // Ajout du rôle par défaut ROLE_CLIENT
+        $user->setRoles(['ROLE_USER']);
         
         // Persist l'utilisateur et enregistre dans la base de données
         $em->persist($user);

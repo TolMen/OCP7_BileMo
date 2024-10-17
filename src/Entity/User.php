@@ -26,7 +26,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'json')]
     #[Groups(["getUsers", "getClients"])]
-    #[Assert\NotBlank(message: "Un rôle est obligatoire -->  ROLE_ADMIN ou ROLE_CLIENT")]
     private $roles = [];
 
     #[ORM\Column(type: 'string')]
