@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class APIProductController extends AbstractController
 {
@@ -28,15 +30,21 @@ class APIProductController extends AbstractController
     */
 
     #[Route('/api/products', name: 'products', methods: ['GET'])]
-    public function getAllProducts(ProductRepository $productRepository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getAllProducts(ProductRepository $productRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
 
         $page = $request->get('page', 1);
         $limit = $request->get('limit',10);
 
-        $productList = $productRepository->findAllWithPagination($page, $limit);
+        $idCache = "getAllProducts-" . $page . "-" . $limit;
+
+        $jsonProductList = $cache->get($idCache, function (ItemInterface $item) use ( $productRepository, $page, $limit, $serializer) {
+            echo ("L'élement n'est pas encore en cache !\n");
+            $item->tag('productsCache');
+            $productList = $productRepository->findAllWithPagination($page, $limit);
+            return $serializer->serialize($productList, 'json', ['groups' => 'getProducts']);
+        });
         
-        $jsonProductList = $serializer->serialize($productList, 'json', ['groups' => 'getProducts']);
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
     }
 
@@ -52,8 +60,18 @@ class APIProductController extends AbstractController
     */
 
     #[Route('/api/products/{id}', name: 'detailProduct', methods: ['GET'])]
-    public function getDetailProduct(Product $product, SerializerInterface $serializer): JsonResponse {
-        $jsonProduct = $serializer->serialize($product, 'json', ['groups' => 'getProducts']);
+    public function getDetailProduct(Product $product, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse {
+
+        $idCache = "getDetailProduct-" . $product->getId();
+
+        $jsonProduct = $cache->get($idCache, function (ItemInterface $item) use ($product, $serializer) {
+
+            $item->tag('productsCache'); 
+            echo ("Le produit n'est pas encore en cache !\n");
+
+            return $serializer->serialize($product, 'json', ['groups' => 'getProducts']);
+        });
+
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
     }
 }
