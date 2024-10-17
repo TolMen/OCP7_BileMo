@@ -6,6 +6,8 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -14,18 +16,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getUsers", "getClients"])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Groups(["getUsers", "getClients"])]
+    #[Assert\NotBlank(message: "Un email est obligatoire")]
     private ?string $email = null;
 
     #[ORM\Column(type: 'json')]
+    #[Groups(["getUsers", "getClients"])]
+    #[Assert\NotBlank(message: "Un rôle est obligatoire -->  ROLE_ADMIN ou ROLE_CLIENT")]
     private $roles = [];
 
     #[ORM\Column(type: 'string')]
+    #[Groups(["getUsers", "getClients"])]
+    #[Assert\NotBlank(message: "Un mot de passe est obligatoire")]
+    #[Assert\Length(min: 8, max: 255, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères", maxMessage: "Le mot de passe ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $password = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
+    #[Groups(["getUsers"])]
     private ?Client $client = null;
 
     public function getId(): ?int
