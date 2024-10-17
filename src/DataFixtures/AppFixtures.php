@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Product;
+use App\Entity\Client;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -10,6 +11,7 @@ class AppFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
+        // Produits
         $products = [
             ['iPhone 15 Pro Max', 1299.99, 'Le dernier modèle d\'Apple avec une puce A17, écran OLED 6,7 pouces, triple caméra 48MP, et une autonomie améliorée.'],
             ['Samsung Galaxy S23 Ultra', 1199.99, 'Téléphone phare de Samsung avec un écran AMOLED 6,8 pouces, processeur Exynos 2200, et un zoom optique 10x.'],
@@ -33,6 +35,23 @@ class AppFixtures extends Fixture
             $manager->persist($product);
         }
 
+        // Clients
+        $clients = [
+            'Boulanger',
+            'Fnac',
+            'Darty',
+            'Amazon',
+            'Cdiscount'
+        ];
+
+        foreach ($clients as $clientName) {
+            $client = new Client();
+            $client->setName($clientName);
+
+            $manager->persist($client);
+        }
+
+        // Sauvegarder toutes les données
         $manager->flush();
     }
 }
