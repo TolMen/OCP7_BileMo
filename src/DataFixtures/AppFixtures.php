@@ -4,13 +4,41 @@ namespace App\DataFixtures;
 
 use App\Entity\Product;
 use App\Entity\Client;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+
+    private $userPasswordHasher;
+    
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+
+
     public function load(ObjectManager $manager): void
     {
+
+        // Création d'un user "normal"
+        $user = new User();
+        $user->setEmail("user@bilemoapi.com");
+        $user->setRoles(["ROLE_USER"]);
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, "password"));
+        $manager->persist($user);
+        
+        // Création d'un user admin
+        $userAdmin = new User();
+        $userAdmin->setEmail("admin@bilemoapi.com");
+        $userAdmin->setRoles(["ROLE_ADMIN"]);
+        $userAdmin->setPassword($this->userPasswordHasher->hashPassword($userAdmin, "password"));
+        $manager->persist($userAdmin);
+
+
+        
         // Produits
         $products = [
             ['iPhone 15 Pro Max', 1299.99, 'Le dernier modèle d\'Apple avec une puce A17, écran OLED 6,7 pouces, triple caméra 48MP, et une autonomie améliorée.'],
