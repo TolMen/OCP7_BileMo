@@ -9,6 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class APIClientController extends AbstractController
 {
@@ -18,10 +19,12 @@ class APIClientController extends AbstractController
 
     - URI : /api/clients
     - Méthode HTTP : "Verbe" GET
+    - Authentification : JWT requise
 
     */
 
     #[Route('/api/clients', name: 'clients', methods: ['GET'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les clients')]
     public function getAllClients(ClientRepository $clientRepository, SerializerInterface $serializer): JsonResponse
     {
         $clientList = $clientRepository->findAll();
@@ -37,10 +40,12 @@ class APIClientController extends AbstractController
 
     - URI : /api/clients/{id}
     - Méthode HTTP : "Verbe" GET
+    - Authentification : JWT requise
 
     */
 
     #[Route('/api/clients/{id}', name: 'detailClient', methods: ['GET'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les clients')]
     public function getDetailClient(Client $client, SerializerInterface $serializer): JsonResponse {
         $jsonClient = $serializer->serialize($client, 'json', ['groups' => 'getClients']);
         return new JsonResponse($jsonClient, Response::HTTP_OK, [], true);
