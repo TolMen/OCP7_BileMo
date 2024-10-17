@@ -20,6 +20,7 @@ class APIClientController extends AbstractController
     - URI : /api/clients
     - Méthode HTTP : "Verbe" GET
     - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
 
@@ -41,6 +42,7 @@ class APIClientController extends AbstractController
     - URI : /api/clients/{id}
     - Méthode HTTP : "Verbe" GET
     - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
 
