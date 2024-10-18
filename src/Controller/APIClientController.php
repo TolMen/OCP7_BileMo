@@ -34,8 +34,11 @@ class APIClientController extends AbstractController
         $idCache = "getAllClients";
 
         $jsonClientList = $cache->get($idCache, function (ItemInterface $item) use ($clientRepository, $serializer) {
-            echo ("L'élement n'est pas encore en cache !\n");
+
             $item->tag('clientsCache');
+            $item->expiresAfter(120);
+            echo ("Les clients ne sont pas encore en cache !\n");
+
             $clientList = $clientRepository->findAll();
             return $serializer->serialize($clientList, 'json', ['groups' => 'getClients']);
         });
@@ -66,7 +69,8 @@ class APIClientController extends AbstractController
         $jsonClient = $cache->get($idCache, function (ItemInterface $item) use ($client, $serializer) {
 
             $item->tag('getDetailClient');
-            echo ("Le produit n'est pas encore en cache !\n");
+            $item->expiresAfter(120);
+            echo ("Le client n'est pas encore en cache !\n");
 
             return $serializer->serialize($client, 'json', ['groups' => 'getClients']);
         });

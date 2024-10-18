@@ -48,10 +48,12 @@ class APIUserController extends AbstractController
 
         // Mise en cache de la liste des utilisateurs
         $jsonUserList = $cache->get($idCache, function (ItemInterface $item) use ($userRepository, $page, $limit, $serializer) {
-            echo ("L'élément n'est pas encore en cache !\n");
-
+            
             // Tag pour invalider le cache en cas de mise à jour des utilisateurs
             $item->tag('usersCache');
+            $item->expiresAfter(240);
+
+            echo ("Les utilisateurs ne sont pas encore en cache !\n");
 
             $userList = $userRepository->findAllWithPagination($page, $limit);
             return $serializer->serialize($userList, 'json', ['groups' => 'getUsers']);
@@ -82,10 +84,11 @@ class APIUserController extends AbstractController
 
         
         $jsonUser = $cache->get($idCache, function (ItemInterface $item) use ($user, $serializer) {
-            echo ("L'utilisateur n'est pas encore en cache !\n");
-
             
             $item->tag('usersCache');
+            $item->expiresAfter(240);
+
+            echo ("L'utilisateur n'est pas encore en cache !\n");
 
             return $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
         });
@@ -108,8 +111,9 @@ class APIUserController extends AbstractController
 
     #[Route('/api/clients/{clientId}/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour supprimer un utilisateur')]
-    public function deleteUser(User $user, EntityManagerInterface $em): JsonResponse
+    public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {
+        $cache->invalidateTags(["usersCache"]);
         $em->remove($user);
         $em->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
@@ -137,8 +141,11 @@ class APIUserController extends AbstractController
         ClientRepository $clientRepository,
         int $clientId,
         UserPasswordHasherInterface $passwordHasher,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        TagAwareCacheInterface $cache
     ): JsonResponse {
+
+        $cache->invalidateTags(["usersCache"]);
 
         $user = $serializer->deserialize($request->getContent(), User::class, 'json');
 
@@ -196,8 +203,12 @@ class APIUserController extends AbstractController
         ClientRepository $clientRepository,
         int $clientId,
         ValidatorInterface $validator,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        TagAwareCacheInterface $cache
     ): JsonResponse {
+
+        $cache->invalidateTags(["usersCache"]);
+
         // Récupération des données envoyées dans la requête
         $data = json_decode($request->getContent(), true);
 
