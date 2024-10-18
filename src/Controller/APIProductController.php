@@ -34,17 +34,17 @@ class APIProductController extends AbstractController
     {
 
         $page = $request->get('page', 1);
-        $limit = $request->get('limit',10);
+        $limit = $request->get('limit', 10);
 
         $idCache = "getAllProducts-" . $page . "-" . $limit;
 
-        $jsonProductList = $cache->get($idCache, function (ItemInterface $item) use ( $productRepository, $page, $limit, $serializer) {
+        $jsonProductList = $cache->get($idCache, function (ItemInterface $item) use ($productRepository, $page, $limit, $serializer) {
             echo ("L'élement n'est pas encore en cache !\n");
             $item->tag('productsCache');
             $productList = $productRepository->findAllWithPagination($page, $limit);
             return $serializer->serialize($productList, 'json', ['groups' => 'getProducts']);
         });
-        
+
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
     }
 
@@ -60,13 +60,14 @@ class APIProductController extends AbstractController
     */
 
     #[Route('/api/products/{id}', name: 'detailProduct', methods: ['GET'])]
-    public function getDetailProduct(Product $product, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse {
+    public function getDetailProduct(Product $product, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
+    {
 
         $idCache = "getDetailProduct-" . $product->getId();
 
         $jsonProduct = $cache->get($idCache, function (ItemInterface $item) use ($product, $serializer) {
 
-            $item->tag('productsCache'); 
+            $item->tag('productsCache');
             echo ("Le produit n'est pas encore en cache !\n");
 
             return $serializer->serialize($product, 'json', ['groups' => 'getProducts']);

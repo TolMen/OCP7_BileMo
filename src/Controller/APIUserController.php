@@ -16,6 +16,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class APIUserController extends AbstractController
 {
@@ -35,16 +37,28 @@ class APIUserController extends AbstractController
 
     #[Route('/api/users', name: 'users', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les utilisateurs')]
-    public function getAllUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request): JsonResponse
+    public function getAllUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
-
         $page = $request->get('page', 1);
-        $limit = $request->get('limit',10);
+        $limit = $request->get('limit', 10);
 
-        $userList = $userRepository->findAllWithPagination($page, $limit);
-        $jsonUserList = $serializer->serialize($userList, 'json', ['groups' => 'getUsers']);
+        // Identifiant unique pour le cache basé sur la pagination
+        $idCache = "getAllUsers-" . $page . "-" . $limit;
+
+        // Mise en cache de la liste des utilisateurs
+        $jsonUserList = $cache->get($idCache, function (ItemInterface $item) use ($userRepository, $page, $limit, $serializer) {
+            echo ("L'élément n'est pas encore en cache !\n");
+
+            // Tag pour invalider le cache en cas de mise à jour des utilisateurs
+            $item->tag('usersCache');
+
+            $userList = $userRepository->findAllWithPagination($page, $limit);
+            return $serializer->serialize($userList, 'json', ['groups' => 'getUsers']);
+        });
+
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
     }
+
 
 
     /*
@@ -60,11 +74,24 @@ class APIUserController extends AbstractController
 
     #[Route('/api/users/{id}', name: 'detailUser', methods: ['GET'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les détails d\'un utilisateur')]
-    public function getDetailUser(User $user, SerializerInterface $serializer): JsonResponse
+    public function getDetailUser(User $user, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
     {
-        $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
+        
+        $idCache = "getDetailUser-" . $user->getId();
+
+        
+        $jsonUser = $cache->get($idCache, function (ItemInterface $item) use ($user, $serializer) {
+            echo ("L'utilisateur n'est pas encore en cache !\n");
+
+            
+            $item->tag('usersCache');
+
+            return $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
+        });
+
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
+
 
 
     /*
@@ -98,8 +125,8 @@ class APIUserController extends AbstractController
     - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
-    
-    #[Route('/api/clients/{clientId}/users', name:"createUser", methods: ['POST'])]
+
+    #[Route('/api/clients/{clientId}/users', name: "createUser", methods: ['POST'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour créer un utilisateur')]
     public function createUser(
         Request $request,
@@ -111,36 +138,36 @@ class APIUserController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator
     ): JsonResponse {
-        // Désérialise la requête en un objet User
+
         $user = $serializer->deserialize($request->getContent(), User::class, 'json');
 
-        // On vérifie les erreurs de validation automatiquement avec les contraintes définies dans l'entité
+
         $errors = $validator->validate($user);
 
-        // Retourne les erreurs de validation si présentes
+
         if ($errors->count() > 0) {
             return new JsonResponse($serializer->serialize($errors, 'json'), Response::HTTP_BAD_REQUEST, [], true);
         }
 
-        // Associe le client à l'utilisateur
+
         $client = $clientRepository->find($clientId);
         $user->setClient($client);
 
-        // Hachage du mot de passe
+
         $hashedPassword = $passwordHasher->hashPassword($user, $user->getPassword());
         $user->setPassword($hashedPassword);
 
-        // Ajout du rôle par défaut ROLE_CLIENT
+
         $user->setRoles(['ROLE_USER']);
-        
-        // Persist l'utilisateur et enregistre dans la base de données
+
+
         $em->persist($user);
         $em->flush();
 
-        // Retourne l'utilisateur créé en JSON
+
         $jsonUser = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
-        
-        // Génération de l'URL pour accéder au détail de l'utilisateur
+
+
         $location = $urlGenerator->generate('detailUser', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
