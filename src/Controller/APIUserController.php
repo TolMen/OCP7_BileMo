@@ -18,6 +18,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 class APIUserController extends AbstractController
 {
@@ -172,4 +173,72 @@ class APIUserController extends AbstractController
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
+
+
+    /*
+    
+    Met à jour un utilisateur pour un client
+    
+    - URI : /api/clients/{clientId}/users/{id}
+    - Méthode HTTP : "Verbe" PUT
+    - Authentification : JWT requise
+    - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
+    
+    */
+
+    #[Route('/api/clients/{clientId}/users/{id}', name: "updateUser", methods: ['PUT'])]
+    #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour modifier un utilisateur')]
+    public function updateUser(
+        Request $request,
+        SerializerInterface $serializer,
+        User $currentUser,
+        EntityManagerInterface $em,
+        ClientRepository $clientRepository,
+        int $clientId,
+        ValidatorInterface $validator,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        // Récupération des données envoyées dans la requête
+        $data = json_decode($request->getContent(), true);
+
+        // Vérification si le body de la requête est vide
+        if (empty($data)) {
+            return new JsonResponse(['error' => 'Aucune donnée fournie pour la mise à jour (Email OU Password)'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Désérialisation et mise à jour de l'utilisateur existant
+        $updatedUser = $serializer->deserialize(
+            $request->getContent(),
+            User::class,
+            'json',
+            [AbstractNormalizer::OBJECT_TO_POPULATE => $currentUser]
+        );
+
+        // Vérification si un client est associé
+        $client = $clientRepository->find($clientId);
+        if (!$client) {
+            return new JsonResponse(['error' => 'Client non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+        $updatedUser->setClient($client);
+
+        // Validation des données
+        $errors = $validator->validate($updatedUser);
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), Response::HTTP_BAD_REQUEST, [], true);
+        }
+
+        // Vérification de la présence du mot de passe et hachage s'il est fourni
+        if (!empty($data['password'])) {
+            $hashedPassword = $passwordHasher->hashPassword($updatedUser, $updatedUser->getPassword());
+            $updatedUser->setPassword($hashedPassword);
+        }
+
+        // Mise à jour dans la base de données
+        $em->persist($updatedUser);
+        $em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+
 }
