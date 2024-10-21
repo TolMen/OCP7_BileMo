@@ -70,7 +70,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @return string
      */
-    public function getUsername(): string {
+    public function getUsername(): string
+    {
         return $this->getUserIdentifier();
     }
 
@@ -132,5 +133,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->client = $client;
 
         return $this;
+    }
+
+    #[Groups(["getUsers"])]
+    public function getLinks(): array
+    {
+        return [
+            'CRUD' => '/api/users/' . $this->id,
+        ];
     }
 }

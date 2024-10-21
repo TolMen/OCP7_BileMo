@@ -57,10 +57,16 @@ class APIUserController extends AbstractController
             echo ("Les utilisateurs ne sont pas encore en cache !\n");
 
             $userList = $userRepository->findAllWithPagination($page, $limit);
+            
+            $usersWithLinks = array_map(function ($user) use ($serializer) {
+                $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
+                $userArray['Link'] = $user->getLinks();
+                return $userArray;
+            }, $userList);
 
-            $context = SerializationContext::create()->setGroups(["getUsers"]);
-
-            return $serializer->serialize($userList, 'json', $context);
+            // Sérialisation du tableau en JSON avant de le retourner
+            return $serializer->serialize($usersWithLinks, 'json', SerializationContext::create()->setGroups(['getUsers']));
+          
         });
 
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
@@ -108,22 +114,28 @@ class APIUserController extends AbstractController
 
     Supprime l'utilisateur d'un client
 
-    - URI : /api/clients/{clientId}/users/{id}
+    - URI : /api/users/{id}
     - Méthode HTTP : "Verbe" DELETE
     - Authentification : JWT requise
     - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
 
-    #[Route('/api/clients/{clientId}/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
+    #[Route('/api/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour supprimer un utilisateur')]
     public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {
+        // Invalider le cache pour les utilisateurs
         $cache->invalidateTags(["usersCache"]);
+
+        // Supprimer l'utilisateur
         $em->remove($user);
         $em->flush();
+
+        // Retourner une réponse vide avec le code HTTP 204 No Content
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
+
 
 
     /*
@@ -166,7 +178,8 @@ class APIUserController extends AbstractController
         $errors = $validator->validate($user);
 
         if ($errors->count() > 0) {
-            return new JsonResponse($serializer->serialize($errors, 'json'),
+            return new JsonResponse(
+                $serializer->serialize($errors, 'json'),
                 Response::HTTP_BAD_REQUEST,
                 [],
                 true
@@ -240,14 +253,14 @@ class APIUserController extends AbstractController
 
         // Mise à jour de l'email si modifié
         $currentUser->setEmail($newUser->getEmail());
-
+      
         // Vérification si un nouveau mot de passe est fourni
         if ($newUser->getPassword()) {
             // Hashage du nouveau mot de passe
             $hashedPassword = $passwordHasher->hashPassword($currentUser, $newUser->getPassword());
             $currentUser->setPassword($hashedPassword);
         }
-
+      
         // On vérifie les erreurs de validation
         $errors = $validator->validate($currentUser);
         if ($errors->count() > 0) {
@@ -263,5 +276,4 @@ class APIUserController extends AbstractController
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
-
 }

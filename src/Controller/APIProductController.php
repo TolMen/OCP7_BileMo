@@ -47,10 +47,16 @@ class APIProductController extends AbstractController
 
             $productList = $productRepository->findAllWithPagination($page, $limit);
 
-            $context = SerializationContext::create()->setGroups(['getProducts']);
+            // Ajout des liens pour chaque produit
+            $productsWithLinks = array_map(function ($product) use ($serializer) {
+                $productArray = json_decode($serializer->serialize($product, 'json', SerializationContext::create()->setGroups(['getProducts'])), true);
+                $productArray['Link'] = $product->getLinks();
+                return $productArray;
+            }, $productList);
 
-
-            return $serializer->serialize($productList, 'json', $context);
+            // Sérialisation du tableau en JSON avant de le retourner
+            return $serializer->serialize($productsWithLinks, 'json', SerializationContext::create()->setGroups(['getProducts']));
+          
         });
 
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);

@@ -79,4 +79,12 @@ class Client
 
         return $this;
     }
+
+    #[Groups(["getCLients"])]
+    public function getLinks(): array
+    {
+        return [
+            'Détail' => '/api/clients/' . $this->id,
+        ];
+    }
 }
