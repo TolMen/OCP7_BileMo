@@ -43,8 +43,9 @@ class APIProductController extends AbstractController
         $jsonProductList = $cache->get($idCache, function (ItemInterface $item) use ($productRepository, $page, $limit, $serializer) {
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('productsCache');
-            $item->expiresAfter(120);
-            echo ("Les produits ne sont pas encore en cache !\n");
+            $item->expiresAfter(240);
+
+            // echo ("Les produits ne sont pas encore en cache !\n");
 
             // Récupère la liste paginée des produits
             $productList = $productRepository->findAllWithPagination($page, $limit);
@@ -84,8 +85,9 @@ class APIProductController extends AbstractController
         $jsonProduct = $cache->get($idCache, function (ItemInterface $item) use ($product, $serializer) {
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('productsCache');
-            $item->expiresAfter(120);
-            echo ("Le produit n'est pas encore en cache !\n");
+            $item->expiresAfter(240);
+            
+            // echo ("Le produit n'est pas encore en cache !\n");
 
             // Crée un contexte de sérialisation pour le produit
             $context = SerializationContext::create()->setGroups(['getProducts']);
