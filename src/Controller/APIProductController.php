@@ -56,7 +56,7 @@ class APIProductController extends AbstractController
 
             // Sérialisation du tableau en JSON avant de le retourner
             return $serializer->serialize($productsWithLinks, 'json', SerializationContext::create()->setGroups(['getProducts']));
-
+          
         });
 
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);

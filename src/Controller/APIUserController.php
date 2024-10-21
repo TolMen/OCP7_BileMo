@@ -57,7 +57,6 @@ class APIUserController extends AbstractController
             echo ("Les utilisateurs ne sont pas encore en cache !\n");
 
             $userList = $userRepository->findAllWithPagination($page, $limit);
-
             
             $usersWithLinks = array_map(function ($user) use ($serializer) {
                 $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
@@ -67,6 +66,7 @@ class APIUserController extends AbstractController
 
             // Sérialisation du tableau en JSON avant de le retourner
             return $serializer->serialize($usersWithLinks, 'json', SerializationContext::create()->setGroups(['getUsers']));
+          
         });
 
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
@@ -253,14 +253,14 @@ class APIUserController extends AbstractController
 
         // Mise à jour de l'email si modifié
         $currentUser->setEmail($newUser->getEmail());
-
+      
         // Vérification si un nouveau mot de passe est fourni
         if ($newUser->getPassword()) {
             // Hashage du nouveau mot de passe
             $hashedPassword = $passwordHasher->hashPassword($currentUser, $newUser->getPassword());
             $currentUser->setPassword($hashedPassword);
         }
-
+      
         // On vérifie les erreurs de validation
         $errors = $validator->validate($currentUser);
         if ($errors->count() > 0) {
