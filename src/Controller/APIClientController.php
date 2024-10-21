@@ -7,7 +7,8 @@ use App\Repository\ClientRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -40,7 +41,10 @@ class APIClientController extends AbstractController
             echo ("Les clients ne sont pas encore en cache !\n");
 
             $clientList = $clientRepository->findAll();
-            return $serializer->serialize($clientList, 'json', ['groups' => 'getClients']);
+
+            $context = SerializationContext::create()->setGroups(['getClients']);
+
+            return $serializer->serialize($clientList, 'json', $context);
         });
 
 
@@ -72,7 +76,9 @@ class APIClientController extends AbstractController
             $item->expiresAfter(120);
             echo ("Le client n'est pas encore en cache !\n");
 
-            return $serializer->serialize($client, 'json', ['groups' => 'getClients']);
+            $context = SerializationContext::create()->setGroups(['getClients']);
+
+            return $serializer->serialize($client, 'json', $context);
         });
 
 
