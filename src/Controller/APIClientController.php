@@ -31,22 +31,32 @@ class APIClientController extends AbstractController
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les clients')]
     public function getAllClients(ClientRepository $clientRepository, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
     {
-
         $idCache = "getAllClients";
 
         $jsonClientList = $cache->get($idCache, function (ItemInterface $item) use ($clientRepository, $serializer) {
-
             $item->tag('clientsCache');
             $item->expiresAfter(120);
             echo ("Les clients ne sont pas encore en cache !\n");
 
             $clientList = $clientRepository->findAll();
 
-            $context = SerializationContext::create()->setGroups(['getClients']);
+            // Ajout des liens pour chaque client
+            $clientsWithLinks = array_map(function ($client) use ($serializer) {
+                $clientArray = json_decode($serializer->serialize($client, 'json', SerializationContext::create()->setGroups(['getClients'])), true);
 
-            return $serializer->serialize($clientList, 'json', $context);
+                // Ajout des liens pour les utilisateurs
+                $clientArray['Lien du client'] = $client->getLinks();
+                $clientArray['users'] = array_map(function ($user) use ($serializer) {
+                    $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
+                    $userArray['Lien de l\'utilisateur'] = $user->getLinks(); // Ajout du lien pour l'utilisateur
+                    return $userArray;
+                }, $client->getUsers()->toArray());
+
+                return $clientArray;
+            }, $clientList);
+
+            return $serializer->serialize($clientsWithLinks, 'json', SerializationContext::create()->setGroups(['getClients']));
         });
-
 
         return new JsonResponse($jsonClientList, Response::HTTP_OK, [], true);
     }

@@ -68,4 +68,12 @@ class Product
 
         return $this;
     }
+
+    #[Groups(["getProducts"])]
+    public function getLinks(): array
+    {
+        return [
+            'Détail' => '/api/products/' . $this->id,
+        ];
+    }
 }

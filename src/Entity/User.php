@@ -134,4 +134,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    #[Groups(["getUsers"])]
+    public function getLinks(): array
+    {
+        return [
+            'CRUD' => '/api/users/' . $this->id,
+        ];
+    }
 }

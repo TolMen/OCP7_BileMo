@@ -58,9 +58,15 @@ class APIUserController extends AbstractController
 
             $userList = $userRepository->findAllWithPagination($page, $limit);
 
-            $context = SerializationContext::create()->setGroups(["getUsers"]);
+            
+            $usersWithLinks = array_map(function ($user) use ($serializer) {
+                $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
+                $userArray['Link'] = $user->getLinks();
+                return $userArray;
+            }, $userList);
 
-            return $serializer->serialize($userList, 'json', $context);
+            // Sérialisation du tableau en JSON avant de le retourner
+            return $serializer->serialize($usersWithLinks, 'json', SerializationContext::create()->setGroups(['getUsers']));
         });
 
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
@@ -108,22 +114,28 @@ class APIUserController extends AbstractController
 
     Supprime l'utilisateur d'un client
 
-    - URI : /api/clients/{clientId}/users/{id}
+    - URI : /api/users/{id}
     - Méthode HTTP : "Verbe" DELETE
     - Authentification : JWT requise
     - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     */
 
-    #[Route('/api/clients/{clientId}/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
+    #[Route('/api/users/{id}', name: 'deleteUser', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour supprimer un utilisateur')]
     public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {
+        // Invalider le cache pour les utilisateurs
         $cache->invalidateTags(["usersCache"]);
+
+        // Supprimer l'utilisateur
         $em->remove($user);
         $em->flush();
+
+        // Retourner une réponse vide avec le code HTTP 204 No Content
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
+
 
 
     /*
