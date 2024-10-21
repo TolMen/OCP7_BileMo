@@ -19,11 +19,9 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 class APIUserController extends AbstractController
 {
-
     /*
 
     Récupère la liste de tous les utilisateurs
@@ -32,8 +30,8 @@ class APIUserController extends AbstractController
     - Méthode HTTP : "Verbe" GET
     - Authentification : JWT requise
     - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
-    - Pagination défauts : Limite de 10 par page
-    - Modifier la pagination : URI + ?page=X&limit=X (X etant un chiffre à choisir)
+    - Pagination défaut : Limite de 10 par page
+    - Modifier la pagination : URI + ?page=X&limit=X (X étant un chiffre à choisir)
 
     */
 
@@ -41,23 +39,25 @@ class APIUserController extends AbstractController
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les utilisateurs')]
     public function getAllUsers(UserRepository $userRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
+        // Récupération de la page et de la limite à partir des paramètres de requête
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 10);
 
-        // Identifiant unique pour le cache basé sur la pagination
+        // Identifiant de cache unique basé sur la pagination
         $idCache = "getAllUsers-" . $page . "-" . $limit;
 
         // Mise en cache de la liste des utilisateurs
         $jsonUserList = $cache->get($idCache, function (ItemInterface $item) use ($userRepository, $page, $limit, $serializer) {
-
-            // Tag pour invalider le cache en cas de mise à jour des utilisateurs
+            // Tag pour invalider le cache si nécessaire et durée de vie
             $item->tag('usersCache');
             $item->expiresAfter(240);
 
             echo ("Les utilisateurs ne sont pas encore en cache !\n");
 
+            // Récupération des utilisateurs avec pagination
             $userList = $userRepository->findAllWithPagination($page, $limit);
-            
+
+            // Ajout des liens à chaque utilisateur
             $usersWithLinks = array_map(function ($user) use ($serializer) {
                 $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
                 $userArray['Link'] = $user->getLinks();
@@ -66,12 +66,11 @@ class APIUserController extends AbstractController
 
             // Sérialisation du tableau en JSON avant de le retourner
             return $serializer->serialize($usersWithLinks, 'json', SerializationContext::create()->setGroups(['getUsers']));
-          
         });
 
+        // Retourne la liste des utilisateurs sous forme de réponse JSON
         return new JsonResponse($jsonUserList, Response::HTTP_OK, [], true);
     }
-
 
 
     /*
@@ -89,30 +88,30 @@ class APIUserController extends AbstractController
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour consulter les détails d\'un utilisateur')]
     public function getDetailUser(User $user, SerializerInterface $serializer, TagAwareCacheInterface $cache): JsonResponse
     {
-
+        // Identifiant de cache pour les détails de l'utilisateur
         $idCache = "getDetailUser-" . $user->getId();
 
-
+        // Mise en cache des détails de l'utilisateur
         $jsonUser = $cache->get($idCache, function (ItemInterface $item) use ($user, $serializer) {
-
             $item->tag('usersCache');
             $item->expiresAfter(240);
 
             echo ("L'utilisateur n'est pas encore en cache !\n");
 
+            // Création d'un contexte de sérialisation pour l'utilisateur
             $context = SerializationContext::create()->setGroups(["getUsers"]);
 
             return $serializer->serialize($user, 'json', $context);
         });
 
+        // Retourne les détails de l'utilisateur sous forme de réponse JSON
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
 
-
     /*
 
-    Supprime l'utilisateur d'un client
+    Supprime l'utilisateur
 
     - URI : /api/users/{id}
     - Méthode HTTP : "Verbe" DELETE
@@ -125,33 +124,32 @@ class APIUserController extends AbstractController
     #[IsGranted('ROLE_USER', message: 'Vous n\'avez pas les droits pour supprimer un utilisateur')]
     public function deleteUser(User $user, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {
-        // Invalider le cache pour les utilisateurs
+        // Invalidation du cache pour les utilisateurs
         $cache->invalidateTags(["usersCache"]);
 
-        // Supprimer l'utilisateur
+        // Suppression de l'utilisateur
         $em->remove($user);
         $em->flush();
 
-        // Retourner une réponse vide avec le code HTTP 204 No Content
+        // Retourne une réponse vide avec le code HTTP 204 No Content
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
-
 
 
     /*
 
     Crée un utilisateur pour un client
 
-    - URI : /api/clients/{clientId}/users
+    - URI : /api/users
     - Méthode HTTP : "Verbe" POST
     - Authentification : JWT requise
     - Header Key : Value --> "Content-Type : application/json" AND "Authorization : bearer TOKEN"
 
     - Exemple de body :
     {
-    "email": "nouvel.utilisateur@example.com",
-    "password": "motdepasse123",
-    "clientId": X
+        "email": "nouvel.utilisateur@example.com",
+        "password": "motdepasse123",
+        "clientId": X
     }
 
     */
@@ -168,15 +166,14 @@ class APIUserController extends AbstractController
         ValidatorInterface $validator,
         TagAwareCacheInterface $cache
     ): JsonResponse {
-
+        // Invalidation du cache pour les utilisateurs
         $cache->invalidateTags(["usersCache"]);
 
-        // Désérialisation du contenu de la requête dans l'objet User
+        // Désérialisation du contenu de la requête dans un objet User
         $user = $serializer->deserialize($request->getContent(), User::class, 'json');
 
         // Validation de l'utilisateur
         $errors = $validator->validate($user);
-
         if ($errors->count() > 0) {
             return new JsonResponse(
                 $serializer->serialize($errors, 'json'),
@@ -186,8 +183,7 @@ class APIUserController extends AbstractController
             );
         }
 
-        // Récupération du client (assumant que le client est lié à l'utilisateur d'une manière ou d'une autre)
-        // Par exemple, si tu récupères le client via un ID dans les données de la requête
+        // Récupération du client lié à l'utilisateur
         $content = $request->toArray();
         $clientId = $content['clientId'] ?? null;
 
@@ -195,6 +191,7 @@ class APIUserController extends AbstractController
             return new JsonResponse(['message' => 'Client not found'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Association de l'utilisateur avec le client
         $user->setClient($client);
 
         // Hashage du mot de passe
@@ -208,7 +205,7 @@ class APIUserController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        // Sérialisation de l'utilisateur avec les groupes de contexte appropriés
+        // Sérialisation de l'utilisateur pour la réponse
         $context = SerializationContext::create()->setGroups(["getUsers"]);
         $jsonUser = $serializer->serialize($user, 'json', $context);
 
@@ -219,10 +216,9 @@ class APIUserController extends AbstractController
     }
 
 
-
     /*
 
-    Met à jour un utilisateur pour un client
+    Met à jour un utilisateur
 
     - URI : /api/users/{id}
     - Méthode HTTP : "Verbe" PUT
@@ -231,8 +227,8 @@ class APIUserController extends AbstractController
 
     - Exemple de body :
     {
-    "email": "utilisateur.MODIFIER@example.com",
-    "password": "motdepasseMODIFIER",
+        "email": "utilisateur.MODIFIER@example.com",
+        "password": "motdepasseMODIFIER",
     }
 
     */
@@ -248,20 +244,20 @@ class APIUserController extends AbstractController
         TagAwareCacheInterface $cache,
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse {
-        // Désérialisation partielle (on évite de désérialiser des relations sensibles comme "client")
+        // Désérialisation partielle (évite de désérialiser des relations sensibles)
         $newUser = $serializer->deserialize($request->getContent(), User::class, 'json');
 
         // Mise à jour de l'email si modifié
         $currentUser->setEmail($newUser->getEmail());
-      
+
         // Vérification si un nouveau mot de passe est fourni
         if ($newUser->getPassword()) {
             // Hashage du nouveau mot de passe
             $hashedPassword = $passwordHasher->hashPassword($currentUser, $newUser->getPassword());
             $currentUser->setPassword($hashedPassword);
         }
-      
-        // On vérifie les erreurs de validation
+
+        // Validation des modifications
         $errors = $validator->validate($currentUser);
         if ($errors->count() > 0) {
             return new JsonResponse($serializer->serialize($errors, 'json'), Response::HTTP_BAD_REQUEST, [], true);
