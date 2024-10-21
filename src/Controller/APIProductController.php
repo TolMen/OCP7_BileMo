@@ -8,7 +8,8 @@ use App\Repository\ProductRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -45,7 +46,11 @@ class APIProductController extends AbstractController
             echo ("Les produits ne sont pas encore en cache !\n");
 
             $productList = $productRepository->findAllWithPagination($page, $limit);
-            return $serializer->serialize($productList, 'json', ['groups' => 'getProducts']);
+
+            $context = SerializationContext::create()->setGroups(['getProducts']);
+
+
+            return $serializer->serialize($productList, 'json', $context);
         });
 
         return new JsonResponse($jsonProductList, Response::HTTP_OK, [], true);
@@ -74,7 +79,9 @@ class APIProductController extends AbstractController
             $item->expiresAfter(120);
             echo ("Le produit n'est pas encore en cache !\n");
 
-            return $serializer->serialize($product, 'json', ['groups' => 'getProducts']);
+            $context = SerializationContext::create()->setGroups(['getProducts']);
+
+            return $serializer->serialize($product, 'json', $context);
         });
 
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
