@@ -1,0 +1,121 @@
+@startuml
+actor Visiteur
+actor UtilisateurToken
+
+note right API_BileMo: Les groupes de couleurs indiquent \nles requêtes et leurs réponses
+
+
+group Token
+
+Visiteur -[#D81159]> API_BileMo : POST login_check
+API_BileMo -[#D81159]> API_BileMo : Vérifie le body
+API_BileMo -[#D81159]> Visiteur : Donne un Token 
+
+end
+
+group Fonction API Utilisateur
+
+group Liste utilisateurs
+
+UtilisateurToken -[#4DAA57]> API_BileMo : GET users
+API_BileMo --[#4DAA57]> BDD : Demande la liste des utilisateurs
+BDD --[#4DAA57]> API_BileMo : Réponse 200 OK
+API_BileMo -[#4DAA57]> UtilisateurToken : Réponse 200 OK + Body
+
+end
+
+
+group Détail d'un utilisateur
+
+UtilisateurToken -[#FFF11C]> API_BileMo : GET detailUser
+API_BileMo --[#FFF11C]> BDD : Demande les détails de l'utilisateur
+BDD --[#FFF11C]> API_BileMo : Réponse 200 OK
+API_BileMo -[#FFF11C]> UtilisateurToken : Réponse 200 OK + Body
+
+end
+
+group Ajouter un utilisateur
+
+UtilisateurToken -[#30C5FF]> API_BileMo : POST createUser
+API_BileMo -[#30C5FF]> API_BileMo : Vérifie le body
+API_BileMo --[#30C5FF]> BDD : Demande d'ajouter les données
+BDD --[#30C5FF]> API_BileMo : Réponse 200 OK
+API_BileMo -[#30C5FF]> UtilisateurToken : Réponse 200 OK + Body
+
+end
+
+group Modifier un utilisateur
+
+UtilisateurToken -[#383D3B]> API_BileMo : PUT updateUser
+API_BileMo -[#383D3B]> API_BileMo : Vérifie le body
+API_BileMo --[#383D3B]> BDD : Demande de modification des données
+BDD --[#383D3B]> API_BileMo : Réponse 201 Created
+API_BileMo -[#383D3B]> UtilisateurToken : Réponse 201 Created + Body
+
+end
+
+
+group Supprimer un utilisateur
+
+UtilisateurToken -[#F96900]> API_BileMo : DELETE deleteUser
+API_BileMo --[#F96900]> BDD : Demande de supprimer les données
+BDD --[#F96900]> API_BileMo : Réponse 204 No Content
+API_BileMo -[#F96900]> UtilisateurToken : Réponse 204 No Content + Body vide
+
+end
+
+end
+
+
+
+group Fonction API Produit
+
+group Liste produit
+
+Visiteur-[#B0333E]> API_BileMo : GET products
+UtilisateurToken -[#B0333E]> API_BileMo : GET products
+API_BileMo --[#B0333E]> BDD : Demande la liste des produits
+BDD --[#B0333E]> API_BileMo : Réponse 200 OK
+API_BileMo -[#B0333E]> UtilisateurToken : Réponse 200 OK + Body
+API_BileMo -[#B0333E]> Visiteur : Réponse 200 OK + Body
+
+end
+
+
+group Détail d'un produit
+
+Visiteur-[#16E0BD]> API_BileMo : GET detailProduct
+UtilisateurToken -[#16E0BD]> API_BileMo : GET detailProduct
+API_BileMo --[#16E0BD]> BDD : Demande les détails du produit
+BDD --[#16E0BD]> API_BileMo : Réponse 200 OK
+API_BileMo -[#16E0BD]> UtilisateurToken : Réponse 200 OK + Body
+API_BileMo -[#16E0BD]> Visiteur : Réponse 200 OK + Body
+
+end
+
+end
+
+
+group Fonction API Client
+
+group Liste clients
+
+UtilisateurToken -[#8B6220]> API_BileMo : GET clients
+API_BileMo --[#8B6220]> BDD : Demande la liste des clients
+BDD --[#8B6220]> API_BileMo : Réponse 200 OK
+API_BileMo -[#8B6220]> UtilisateurToken : Réponse 200 OK + Body
+
+end
+
+
+group Détail d'un client
+
+UtilisateurToken -[#0D5D56]> API_BileMo : GET detailClient
+API_BileMo --[#0D5D56]> BDD : Demande les détails du client
+BDD --[#0D5D56]> API_BileMo : Réponse 200 OK
+API_BileMo -[#0D5D56]> UtilisateurToken : Réponse 200 OK + Body
+
+end
+
+end
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+
+
+entity user {
+#id: int
+~email: varchar
+~password: varchar
++roles: json
+-client_id: int
+}
+
+class product  {
+#id: int
++name: varchar
++price: float
++description: text
+}
+
+entity client {
+#id: int
++name: varchar
+}
+
+
+client "1" --> "0..*" user : posséde >
+
+
+@enduml
