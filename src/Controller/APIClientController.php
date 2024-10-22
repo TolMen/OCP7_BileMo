@@ -40,8 +40,6 @@ class APIClientController extends AbstractController
             $item->tag('clientsCache');
             $item->expiresAfter(240);
 
-            // echo ("Les clients ne sont pas encore en cache !\n");
-
             // Récupère tous les clients
             $clientList = $clientRepository->findAll();
 
@@ -93,8 +91,6 @@ class APIClientController extends AbstractController
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('getDetailClient');
             $item->expiresAfter(240);
-
-            // echo ("Le client n'est pas encore en cache !\n");
 
             // Crée un contexte de sérialisation pour le client
             $context = SerializationContext::create()->setGroups(['getClients']);

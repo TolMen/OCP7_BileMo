@@ -45,8 +45,6 @@ class APIProductController extends AbstractController
             $item->tag('productsCache');
             $item->expiresAfter(240);
 
-            // echo ("Les produits ne sont pas encore en cache !\n");
-
             // Récupère la liste paginée des produits
             $productList = $productRepository->findAllWithPagination($page, $limit);
 
@@ -87,8 +85,6 @@ class APIProductController extends AbstractController
             $item->tag('productsCache');
             $item->expiresAfter(240);
             
-            // echo ("Le produit n'est pas encore en cache !\n");
-
             // Crée un contexte de sérialisation pour le produit
             $context = SerializationContext::create()->setGroups(['getProducts']);
 

@@ -52,8 +52,6 @@ class APIUserController extends AbstractController
             $item->tag('usersCache');
             $item->expiresAfter(240);
 
-            // echo ("Les utilisateurs ne sont pas encore en cache !\n");
-
             // Récupération des utilisateurs avec pagination
             $userList = $userRepository->findAllWithPagination($page, $limit);
 
@@ -95,8 +93,6 @@ class APIUserController extends AbstractController
         $jsonUser = $cache->get($idCache, function (ItemInterface $item) use ($user, $serializer) {
             $item->tag('usersCache');
             $item->expiresAfter(240);
-
-            // echo ("L'utilisateur n'est pas encore en cache !\n");
 
             // Création d'un contexte de sérialisation pour l'utilisateur
             $context = SerializationContext::create()->setGroups(["getUsers"]);
