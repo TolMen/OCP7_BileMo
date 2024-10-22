@@ -50,11 +50,11 @@ class APIClientController extends AbstractController
                 $clientArray = json_decode($serializer->serialize($client, 'json', SerializationContext::create()->setGroups(['getClients'])), true);
 
                 // Ajoute le lien du client
-                $clientArray['Lien du client'] = $client->getLinks();
+                $clientArray['linkClient'] = $client->getLinks();
                 // Récupère et ajoute les informations des utilisateurs associés
                 $clientArray['users'] = array_map(function ($user) use ($serializer) {
                     $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
-                    $userArray['Lien de l\'utilisateur'] = $user->getLinks(); // Ajoute le lien pour l'utilisateur
+                    $userArray['linkUser'] = $user->getLinks(); // Ajoute le lien pour l'utilisateur
                     return $userArray;
                 }, $client->getUsers()->toArray());
 

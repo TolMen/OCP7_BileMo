@@ -60,7 +60,7 @@ class APIUserController extends AbstractController
             // Ajout des liens à chaque utilisateur
             $usersWithLinks = array_map(function ($user) use ($serializer) {
                 $userArray = json_decode($serializer->serialize($user, 'json', SerializationContext::create()->setGroups(['getUsers'])), true);
-                $userArray['Link'] = $user->getLinks();
+                $userArray['link'] = $user->getLinks();
                 return $userArray;
             }, $userList);
 

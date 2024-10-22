@@ -53,7 +53,7 @@ class APIProductController extends AbstractController
             // Ajoute des liens pour chaque produit et les transforme en tableau
             $productsWithLinks = array_map(function ($product) use ($serializer) {
                 $productArray = json_decode($serializer->serialize($product, 'json', SerializationContext::create()->setGroups(['getProducts'])), true);
-                $productArray['Link'] = $product->getLinks();
+                $productArray['link'] = $product->getLinks();
                 return $productArray;
             }, $productList);
 
