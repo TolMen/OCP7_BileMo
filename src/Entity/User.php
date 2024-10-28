@@ -22,6 +22,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     #[Groups(["getUsers", "getClients"])]
     #[Assert\NotBlank(message: "Un email est obligatoire")]
+    #[Assert\Email(message: "L'email '{{ value }}' n'est pas un email valide.")]
     private ?string $email = null;
 
     #[ORM\Column(type: 'json')]
