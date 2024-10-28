@@ -38,7 +38,7 @@ class APIClientController extends AbstractController
         $jsonClientList = $cache->get($idCache, function (ItemInterface $item) use ($clientRepository, $serializer) {
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('clientsCache');
-            $item->expiresAfter(240);
+            $item->expiresAfter(3600);
 
             // Récupère tous les clients
             $clientList = $clientRepository->findAll();
@@ -90,7 +90,7 @@ class APIClientController extends AbstractController
         $jsonClient = $cache->get($idCache, function (ItemInterface $item) use ($client, $serializer) {
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('getDetailClient');
-            $item->expiresAfter(240);
+            $item->expiresAfter(3600);
 
             // Crée un contexte de sérialisation pour le client
             $context = SerializationContext::create()->setGroups(['getClients']);

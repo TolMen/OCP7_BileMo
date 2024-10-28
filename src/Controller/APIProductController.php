@@ -43,7 +43,7 @@ class APIProductController extends AbstractController
         $jsonProductList = $cache->get($idCache, function (ItemInterface $item) use ($productRepository, $page, $limit, $serializer) {
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('productsCache');
-            $item->expiresAfter(240);
+            $item->expiresAfter(3600);
 
             // Récupère la liste paginée des produits
             $productList = $productRepository->findAllWithPagination($page, $limit);
@@ -83,7 +83,7 @@ class APIProductController extends AbstractController
         $jsonProduct = $cache->get($idCache, function (ItemInterface $item) use ($product, $serializer) {
             // Marque l'élément de cache avec une étiquette et définit sa durée de vie
             $item->tag('productsCache');
-            $item->expiresAfter(240);
+            $item->expiresAfter(3600);
             
             // Crée un contexte de sérialisation pour le produit
             $context = SerializationContext::create()->setGroups(['getProducts']);
