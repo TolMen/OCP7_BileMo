@@ -1,5 +1,7 @@
 # API Bile Mo
 
+> **Ce projet a été réalisé dans le cadre de mon apprentissage pour le parcours d'OpenClassrooms (Développeur d'application PHP/Symfony).**
+
 BileMo is a company specializing in the sale of high-end mobile phones. 
 It offers access to its catalog via an API, for other platforms, thus adopting a B2B (business to business) sales model.
 
