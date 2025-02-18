@@ -1,62 +1,74 @@
-# API Bile Mo
 
-> **Ce projet a été réalisé dans le cadre de mon apprentissage pour le parcours d'OpenClassrooms (Développeur d'application PHP/Symfony).**
+# Bile Mo API 📱
 
-BileMo is a company specializing in the sale of high-end mobile phones. 
-It offers access to its catalog via an API, for other platforms, thus adopting a B2B (business to business) sales model.
+> **This project was completed as part of my learning journey for the OpenClassrooms (PHP/Symfony Application Developer) program.**  
+> --> *Version : [Français](README.md)* 📖 <br>
+> --> *Documentation : [API Doc](https://github.com/TolMen/DocumentationAPIBileMo)* 📃
 
-Access to the API will be reserved for referenced clients, who must authenticate via a JWT Token. 
-The data is exposed in JSON format, respecting levels 1, 2 and 3 of the Richardson model. 
+## 📖 Description
+
+**Bile Mo API** is an API for a company specializing in the sale of high-end mobile phones, providing access to its catalog through a B2B (Business to Business) interface. <br>
+Access to the API is restricted to registered clients who must authenticate via a JWT token. Data is exposed in JSON format, following levels 1, 2, and 3 of the Richardson model. <br>
 Responses are cached to improve query performance.
 
-## Installation
+## 🚀 Features
 
-To install and run this project, follow the steps below :
+- **JWT Authentication** : Secure access via a JWT token to validate user identity.
+- **Catalog Management** : Access to the company’s product catalog with detailed information on mobile phones.
+- **Response Caching** : Responses are cached to optimize performance.
+- **RESTful Architecture** : Follows the three-level Richardson model.
+- **Secure Communication** : Secured exchanges with clients using JWT.
+
+## 🚧 Installation
 
 ### Prerequisites
-- **PHP** (version 8.0 ou supérieure)
-- **Symfony** (version 7 ou supérieure)
+
+Before you start, ensure that you have the following installed on your machine :
+
+- **PHP** (version 8.0 or higher)
+- **Symfony** (version 7 or higher)
 - **Composer**
-- **Une base de données**
+- **MySQL Database**
 
 ### Installation steps
 
-<p><strong>1 - Git clone the project</strong></p>
-<pre>
-    <code>https://github.com/TolMen/OCBileMo</code>
-</pre>
+1. **Clone the repository**  
+   Use Git to clone the project :  
+   ```sh
+   git clone https://github.com/TolMen/OCBileMo.git
+   ```
+2. **Install dependencies**  
+   Run the following command to install the necessary libraries :  
+   ```sh
+   symfony console composer install
+   ```
 
-<p><strong>2 - Install libraries</strong></p>
+3. **Create the database**  
+   Modify the `.env` file to configure your database :  
+   ```sh
+   DATABASE_URL=mysql://db_user:db_password@127.0.0.1:3306/db_name
+   ```
+   Then run the following commands :  
+   ```sh
+   symfony console doctrine:database:create
+   php bin/console doctrine:schema:update --force
+   ```
 
-- symfony console composer install
+4. **Configure JWT**  
+   Install the JWT package and generate secret keys :  
+   ```sh
+   composer require lexik/jwt-authentication-bundle
+   php bin/console lexik:jwt:generate-keypair
+   ```
+   Make sure the paths to the private and public key files are correctly defined in your `.env` file :  
+   ```sh
+   JWT_PASSPHRASE=YourSecretPhrase
+   ```
+---
 
-<p><strong>3 - Create database</strong></p>
+Thank you for exploring this project.  
+Feel free to explore, modify, and improve it ! ✨  
 
-- Update DATABASE_URL .env file with your database configuration :  <br>
-DATABASE_URL=mysql://db_user:db_password@127.0.0.1:3306/db_name <br> <br>
-
-- Create database : <br> symfony console doctrine:database:create <br> <br>
-
-- Create database structure : <br> php bin/console doctrine:schema:update --force <br> <br>
-
-- Insert fictive data (optional) : <br> symfony console doctrine:fixtures:load <br> <br>
-
-<p><strong>4 - Configure JWT</strong></p>
-
-- Install the JWT package by running the following command :  <br>
-composer require lexik/jwt-authentication-bundle <br> <br>
-
-- Generate a secret key for JWT : <br> php bin/console lexik:jwt:generate-keypair
- <br> <br>
-
-- Make sure the paths to the private and public key files are set correctly in your .env file : <br> JWT_PASSPHRASE=VotrePhraseSecrète <br> <br>
-
-## Author
+**For any questions or collaboration, don't hesitate to contact me ! 📩**
 
 [TolMen](https://github.com/TolMen) - [LinkedIn](https://www.linkedin.com/in/jessyfrachisse/)
-
-## License
-
-This project is licensed under MIT - View file [license](LICENSE) for more details.
-
-Feel free to contact me with any questions or contributions. Have a nice visit on our blog !
