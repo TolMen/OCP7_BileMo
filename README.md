@@ -2,13 +2,14 @@
 # Bile Mo API 📱
 
 > **This project was completed as part of my learning journey for the OpenClassrooms (PHP/Symfony Application Developer) program.**  
-> --> *Version : [Français](README.md)* 📖 <br>
+> --> *Version : [Français](README_fr.md)* 📖 <br>
 > --> *Documentation : [API Doc](https://github.com/TolMen/DocumentationAPIBileMo)* 📃
 
 ## 📖 Description
 
 **Bile Mo API** is an API for a company specializing in the sale of high-end mobile phones, providing access to its catalog through a B2B (Business to Business) interface. <br>
-Access to the API is restricted to registered clients who must authenticate via a JWT token. Data is exposed in JSON format, following levels 1, 2, and 3 of the Richardson model. <br>
+Access to the API is restricted to registered clients who must authenticate via a JWT token. <br>
+Data is exposed in JSON format, following levels 1, 2, and 3 of the Richardson model. <br>
 Responses are cached to improve query performance.
 
 ## 🚀 Features
